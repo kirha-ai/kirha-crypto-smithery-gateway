@@ -26,12 +26,11 @@ const __dirname = getCurrentDirname();
 
 export { configSchema };
 
-function loadConfig(configPath?: string): ConfigFile {
-  const defaultPath = __dirname === process.cwd() ?
+function loadConfig(): ConfigFile {
+  const path = __dirname === process.cwd() ?
     join(__dirname, "config.json") : 
     join(dirname(__dirname), "config.json");
-  const path = configPath || defaultPath;
-  
+
   try {
     const configData = readFileSync(path, "utf-8");
     const config = JSON.parse(configData);
@@ -47,11 +46,8 @@ export default function createStatelessServer({
 }: {
   config: Config;
 }) {
-  const appConfig = loadConfig(config.configPath);
-  
-  if (config.debug) {
-    console.log("Loaded configuration:", JSON.stringify(appConfig, null, 2));
-  }
+  const appConfig = loadConfig();
+
   
   const server = new McpServer({
     name: appConfig.mcp.name,
@@ -60,24 +56,14 @@ export default function createStatelessServer({
 
   const toolConfig = appConfig.tool;
   
-  if (toolConfig.enabled) {
-    try {
-      registerToolPlanningTool(server, {
-        apiKey: config.apiKey,
-        config: appConfig,
-        toolConfig,
-        debug: config.debug,
-        configPath: config.configPath,
-      });
-      
-      if (config.debug) {
-        console.log(`Registered tool: ${toolConfig.name}`);
-      }
-    } catch (error) {
-      console.error(`Failed to register tool ${toolConfig.name}:`, error);
-    }
-  } else if (config.debug) {
-    console.log(`Tool disabled: ${toolConfig.name}`);
+  try {
+    registerToolPlanningTool(server, {
+      apiKey: config.apiKey,
+      config: appConfig,
+      toolConfig,
+    });
+  } catch (error) {
+    console.error(`Failed to register tool ${toolConfig.name}:`, error);
   }
 
   return server.server;

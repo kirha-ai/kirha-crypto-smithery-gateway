@@ -1,71 +1,29 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { readFileSync } from "fs";
-import { join, dirname } from "path";
-import { fileURLToPath } from "url";
-import { ToolRegistrationContext, configFileSchema, ConfigFile } from "../types.js";
+import { ToolRegistrationContext } from "../types.js";
 
-function getCurrentDirname() {
-  try {
-    if (typeof import.meta !== 'undefined' && import.meta.url) {
-      return dirname(fileURLToPath(import.meta.url));
-    }
-  } catch (e) {
-  }
-  
-  return process.cwd();
-}
 
-const __dirname = getCurrentDirname();
-
-function lazyLoadConfig(configPath?: string): ConfigFile {
-  const defaultPath = __dirname === process.cwd() ?
-    join(__dirname, "config.json") : 
-    join(dirname(dirname(__dirname)), "config.json");
-  const path = configPath || defaultPath;
-  
-  try {
-    const configData = readFileSync(path, "utf-8");
-    const config = JSON.parse(configData);
-    return configFileSchema.parse(config);
-  } catch (error) {
-    throw new Error(`Failed to load configuration: ${error instanceof Error ? error.message : String(error)}`);
-  }
-}
+// Define the input schema for the tool
+const toolInputSchema = {
+  query: z.string().describe("Your question or query to be processed"),
+};
 
 export function registerToolPlanningTool(server: McpServer, context: ToolRegistrationContext) {
-  const { apiKey, toolConfig, debug, configPath } = context;
+  const { apiKey, config, toolConfig } = context;
   
-  if (debug) {
-    console.log(`Registering tool: ${toolConfig.name}`);
-  }
-
   server.tool(
     toolConfig.name,
     toolConfig.description,
-    {
-      title: toolConfig.title,
-      query: z.string().describe("Your question or query to be processed"),
-    },
+    toolInputSchema,
     async (args) => {
-      if (debug) {
-        console.log(`Executing tool ${toolConfig.name} with query:`, args.query);
-      }
-
       try {
-        const actualConfig = lazyLoadConfig(configPath);
-        
-        if (debug) {
-          console.log(`Loaded configuration for execution: ${actualConfig.vertical}`);
-        }
-
-        const response = await fetch(actualConfig.api.executeToolPlanningUrl, {
+        const response = await fetch(config.api.executeToolPlanningUrl, {
           method: "POST",
           body: JSON.stringify({
             mode: "auto",
             query: args.query,
-            vertical_id: actualConfig.vertical,
-            summarization: actualConfig.api.summarization,
+            vertical_id: config.vertical,
+            summarization: config.api.summarization,
           }),
           headers: {
             "Content-Type": "application/json",
@@ -78,12 +36,7 @@ export function registerToolPlanningTool(server: McpServer, context: ToolRegistr
         }
 
         const result = await response.json();
-        
-        if (debug) {
-          console.log(`Tool ${toolConfig.name} executed successfully`);
-        }
-
-        return { 
+        return {
           content: [{ 
             type: "text" as const, 
             text: JSON.stringify(result, null, 2) 
@@ -91,10 +44,6 @@ export function registerToolPlanningTool(server: McpServer, context: ToolRegistr
         };
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        
-        if (debug) {
-          console.error(`Tool ${toolConfig.name} execution failed:`, errorMessage);
-        }
 
         return { 
           content: [{ 
@@ -105,8 +54,4 @@ export function registerToolPlanningTool(server: McpServer, context: ToolRegistr
       }
     }
   );
-
-  if (debug) {
-    console.log(`Successfully registered tool: ${toolConfig.name}`);
-  }
 }
