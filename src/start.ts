@@ -51,13 +51,25 @@ function parseQueryParams(query: any): any {
 // MCP endpoint - handle both GET and POST
 const handleMcpRequest = async (req: any, res: any, body?: any) => {
     // Parse configuration from query parameters
-    const queryConfig = parseQueryParams(req.query);
+    let queryConfig = parseQueryParams(req.query);
     
-    // Merge with default config, prioritizing query parameters
+    // Handle base64-encoded config parameter (Smithery SDK format)
+    if (req.query.config) {
+        try {
+            const decodedConfig = JSON.parse(Buffer.from(req.query.config, "base64").toString());
+            queryConfig = { ...queryConfig, ...decodedConfig };
+        } catch (error) {
+            console.error('Error parsing base64 config:', error);
+        }
+    }
+
     const requestConfig = {
         ...config,
         ...queryConfig,
-        apiKey: queryConfig.apiKey || config.apiKey,
+        // Handle both apiKey and api_key parameter names
+        // apiKey: User's Kirha API key (configured in Smithery dashboard)
+        // api_key: User's Smithery API key (internal, not used for Kirha)
+        apiKey: queryConfig.apiKey || config.apiKey || "",
     };
     
     const server = createStatelessServer({ config: requestConfig });
