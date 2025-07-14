@@ -29,8 +29,19 @@ app.get('/health', (req, res) => {
 function parseQueryParams(query: any): any {
     const result: any = {};
     
+    // First, check if there's a base64-encoded config parameter
+    if (query.config) {
+        try {
+            const decodedConfig = JSON.parse(Buffer.from(query.config, "base64").toString());
+            Object.assign(result, decodedConfig);
+        } catch (error) {
+            console.error('Error parsing base64 config:', error);
+        }
+    }
+    
+    // Then parse dot-notation parameters
     for (const [key, value] of Object.entries(query)) {
-        if (typeof value === 'string') {
+        if (typeof value === 'string' && key !== 'config' && key !== 'api_key' && key !== 'profile') {
             const keys = key.split('.');
             let current = result;
             
@@ -53,13 +64,21 @@ const handleMcpRequest = async (req: any, res: any, body?: any) => {
     // Parse configuration from query parameters
     const queryConfig = parseQueryParams(req.query);
 
+    const userApiKey = queryConfig.apiKey || config.apiKey || "";
+    
     const requestConfig = {
         ...config,
         ...queryConfig,
-        // Handle both apiKey and api_key parameter names
-        // apiKey: User's Kirha API key (configured in Smithery dashboard)
-        // api_key: User's Smithery API key (internal, not used for Kirha)
-        apiKey: queryConfig.apiKey || config.apiKey || "",
+        apiKey: userApiKey,
+        debugInfo: {
+            rawQuery: req.query,
+            parsedQuery: queryConfig,
+            defaultApiKey: config.apiKey || "none",
+            userConfiguredApiKey: queryConfig.apiKey || "none",
+            finalApiKey: userApiKey || "none",
+            queryKeys: Object.keys(req.query),
+            hasConfigParam: !!req.query.config
+        }
     };
     
     const server = createStatelessServer({ config: requestConfig });

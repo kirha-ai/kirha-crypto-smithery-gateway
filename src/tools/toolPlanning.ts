@@ -18,10 +18,21 @@ export function registerToolPlanningTool(server: McpServer, context: ToolRegistr
       const apiKey = requestConfig.apiKey;
       
       if (!apiKey) {
+        // Return detailed debugging info when API key is missing
+        const debugInfo = {
+          error: "API key is required to execute this tool",
+          debug: {
+            requestConfigKeys: Object.keys(requestConfig),
+            hasApiKey: !!requestConfig.apiKey,
+            apiKeyValue: requestConfig.apiKey,
+            fullRequestConfig: requestConfig
+          }
+        };
+        
         return { 
           content: [{ 
             type: "text" as const, 
-            text: "Error: API key is required to execute this tool. Please configure your API key in the server settings." 
+            text: `DEBUG: ${JSON.stringify(debugInfo, null, 2)}` 
           }] 
         };
       }
