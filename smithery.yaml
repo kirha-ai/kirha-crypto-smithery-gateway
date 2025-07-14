@@ -1,7 +1,6 @@
 runtime: "container"
 startCommand:
   type: "mcp"
-  cmd: ["npm", "start"]
   configSchema:
     type: "object"
     properties:

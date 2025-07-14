@@ -5,10 +5,23 @@ import { join, dirname } from "path";
 import { fileURLToPath } from "url";
 import { ToolRegistrationContext, configFileSchema, ConfigFile } from "../types.js";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+function getCurrentDirname() {
+  try {
+    if (typeof import.meta !== 'undefined' && import.meta.url) {
+      return dirname(fileURLToPath(import.meta.url));
+    }
+  } catch (e) {
+  }
+  
+  return process.cwd();
+}
+
+const __dirname = getCurrentDirname();
 
 function lazyLoadConfig(configPath?: string): ConfigFile {
-  const defaultPath = join(dirname(dirname(__dirname)), "config.json");
+  const defaultPath = __dirname === process.cwd() ?
+    join(__dirname, "config.json") : 
+    join(dirname(dirname(__dirname)), "config.json");
   const path = configPath || defaultPath;
   
   try {

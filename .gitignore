@@ -8,10 +8,6 @@
 !/src/
 !/src/**/*
 
-# Exception: Include bin directory and its contents
-!/bin/
-!/bin/**/*
-
 # Exception: Include configuration and documentation files
 !/Dockerfile
 !/README.md
