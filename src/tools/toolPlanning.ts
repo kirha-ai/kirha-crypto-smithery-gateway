@@ -21,7 +21,7 @@ export function registerToolPlanningTool(server: McpServer, context: ToolRegistr
         return { 
           content: [{ 
             type: "text" as const, 
-            text: "Error: API key is required to execute this tool" 
+            text: "Error: API key is required to execute this tool. Please configure your API key in the server settings." 
           }] 
         };
       }

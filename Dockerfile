@@ -43,4 +43,4 @@ RUN chown -R nodejs:nodejs /app
 USER nodejs
 
 # The server will be started by Smithery's runtime
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/start.js"]
