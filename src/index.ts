@@ -8,29 +8,13 @@ import {
   configFileSchema, 
   Config, 
   ConfigFile, 
-  ToolConfig,
-  AvailableTool 
+  ToolConfig
 } from "./types.js";
 
-// Get the directory of the current module
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// Export the schema for external use
 export { configSchema };
 
-// Available tools mapping
-const availableTools: Record<string, AvailableTool> = {
-  "execute-crypto-tool-planning": {
-    name: "execute-crypto-tool-planning",
-    register: registerToolPlanningTool,
-  },
-  "execute-your-tool-planning": {
-    name: "execute-your-tool-planning", 
-    register: registerToolPlanningTool,
-  },
-};
-
-// Load configuration from JSON file
 function loadConfig(configPath?: string): ConfigFile {
   const defaultPath = join(dirname(__dirname), "config.json");
   const path = configPath || defaultPath;
@@ -50,41 +34,63 @@ export default function createStatelessServer({
 }: {
   config: Config;
 }) {
-  // Load configuration from JSON file
-  const appConfig = loadConfig(config.configPath);
+  let appConfig: ConfigFile;
+  let serverName = "kirha-gateway";
+  let serverVersion = "1.0.0";
   
-  if (config.debug) {
-    console.log("Loaded configuration:", JSON.stringify(appConfig, null, 2));
+  try {
+    appConfig = loadConfig(config.configPath);
+    serverName = appConfig.mcp.name;
+    serverVersion = appConfig.mcp.version;
+    
+    if (config.debug) {
+      console.log("Loaded configuration:", JSON.stringify(appConfig, null, 2));
+    }
+  } catch (error) {
+    if (config.debug) {
+      console.log("Configuration not available during tool discovery, using defaults");
+    }
+    appConfig = {
+      mcp: { name: serverName, version: serverVersion },
+      tool: {
+        name: "execute-tool-planning",
+        title: "Tool Planning",
+        description: "Execute tool planning with your configured vertical",
+        enabled: true
+      },
+      vertical: "default",
+      api: {
+        executeToolPlanningUrl: "https://api.kirha.ai/chat/v1/tool-planning/execute",
+        summarization: { enable: true, model: "kirha-flash" }
+      }
+    };
   }
   
-  // Create MCP server
   const server = new McpServer({
-    name: appConfig.mcp.name,
-    version: appConfig.mcp.version,
+    name: serverName,
+    version: serverVersion,
   });
 
-  // Register the single tool if it's enabled
   const toolConfig = appConfig.tool;
-  const toolName = toolConfig.name;
-  const availableTool = availableTools[toolName as keyof typeof availableTools];
   
-  if (availableTool && toolConfig.enabled) {
+  if (toolConfig.enabled) {
     try {
-      availableTool.register(server, {
+      registerToolPlanningTool(server, {
         apiKey: config.apiKey,
         config: appConfig,
         toolConfig,
         debug: config.debug,
+        configPath: config.configPath,
       });
       
       if (config.debug) {
-        console.log(`Registered tool: ${toolName}`);
+        console.log(`Registered tool: ${toolConfig.name}`);
       }
     } catch (error) {
-      console.error(`Failed to register tool ${toolName}:`, error);
+      console.error(`Failed to register tool ${toolConfig.name}:`, error);
     }
   } else if (config.debug) {
-    console.log(`Skipping tool: ${toolName} (not available or disabled)`);
+    console.log(`Tool disabled: ${toolConfig.name}`);
   }
 
   return server.server;
