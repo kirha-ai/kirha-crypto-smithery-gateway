@@ -7,7 +7,6 @@
 # Exception: Include TypeScript source files
 !/src/
 !/src/**/*
-!/bin/
 
 # Exception: Include configuration and documentation files
 !/Dockerfile
@@ -17,6 +16,7 @@
 !/smithery.yaml
 !/config.json
 !/config.example.json
+!/bin/server.js
 
 # Exception: Include GitHub workflows
 !/.github/
