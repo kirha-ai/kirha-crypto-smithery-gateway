@@ -1,0 +1,20 @@
+{
+  "mcp": {
+    "name": "kirha-your-vertical",
+    "version": "1.0.0"
+  },
+  "tool": {
+    "name": "execute-your-tool-planning",
+    "title": "Your tool title here",
+    "description": "Your tool description explaining what it does and when to use it",
+    "enabled": true
+  },
+  "vertical": "your-vertical-id",
+  "api": {
+    "executeToolPlanningUrl": "https://api.kirha.ai/chat/v1/tool-planning/execute",
+    "summarization": {
+      "enable": true,
+      "model": "kirha-flash"
+    }
+  }
+}

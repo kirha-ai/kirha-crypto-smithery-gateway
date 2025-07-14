@@ -1,0 +1,23 @@
+# Ignore everything by default
+*
+
+# Exception: Don't ignore .gitignore itself
+!/.gitignore
+
+# Exception: Include TypeScript source files
+!/src/
+!/src/**/*
+
+# Exception: Include configuration and documentation files
+!/Dockerfile
+!/README.md
+!/package.json
+!/tsconfig.json
+!/smithery.yaml
+!/config.json
+!/config.example.json
+
+# Exception: Include GitHub workflows
+!/.github/
+!/.github/workflows/
+!/.github/workflows/*.yml
