@@ -1,10 +1,27 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { ToolRegistrationContext } from "../types.js";
+import { readFileSync } from "fs";
+import { join, dirname } from "path";
+import { fileURLToPath } from "url";
+import { ToolRegistrationContext, configFileSchema, ConfigFile } from "../types.js";
 
-// Register the tool planning tool
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+function lazyLoadConfig(configPath?: string): ConfigFile {
+  const defaultPath = join(dirname(dirname(__dirname)), "config.json");
+  const path = configPath || defaultPath;
+  
+  try {
+    const configData = readFileSync(path, "utf-8");
+    const config = JSON.parse(configData);
+    return configFileSchema.parse(config);
+  } catch (error) {
+    throw new Error(`Failed to load configuration: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
 export function registerToolPlanningTool(server: McpServer, context: ToolRegistrationContext) {
-  const { apiKey, config, toolConfig, debug } = context;
+  const { apiKey, toolConfig, debug, configPath } = context;
   
   if (debug) {
     console.log(`Registering tool: ${toolConfig.name}`);
@@ -23,13 +40,19 @@ export function registerToolPlanningTool(server: McpServer, context: ToolRegistr
       }
 
       try {
-        const response = await fetch(config.api.executeToolPlanningUrl, {
+        const actualConfig = lazyLoadConfig(configPath);
+        
+        if (debug) {
+          console.log(`Loaded configuration for execution: ${actualConfig.vertical}`);
+        }
+
+        const response = await fetch(actualConfig.api.executeToolPlanningUrl, {
           method: "POST",
           body: JSON.stringify({
             mode: "auto",
             query: args.query,
-            vertical_id: config.vertical,
-            summarization: config.api.summarization,
+            vertical_id: actualConfig.vertical,
+            summarization: actualConfig.api.summarization,
           }),
           headers: {
             "Content-Type": "application/json",
