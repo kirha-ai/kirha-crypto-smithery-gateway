@@ -29,8 +29,8 @@ export type ConfigFile = z.infer<typeof configFileSchema>;
 export type ToolConfig = ConfigFile["tool"];
 
 export interface ToolRegistrationContext {
-  apiKey: string;
   config: ConfigFile;
   toolConfig: ToolConfig;
+  requestConfig: Config;
 }
 
