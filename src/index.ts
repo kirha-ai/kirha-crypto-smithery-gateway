@@ -11,12 +11,25 @@ import {
   ToolConfig
 } from "./types.js";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+function getCurrentDirname() {
+  try {
+    if (typeof import.meta !== 'undefined' && import.meta.url) {
+      return dirname(fileURLToPath(import.meta.url));
+    }
+  } catch (e) {
+  }
+  
+  return process.cwd();
+}
+
+const __dirname = getCurrentDirname();
 
 export { configSchema };
 
 function loadConfig(configPath?: string): ConfigFile {
-  const defaultPath = join(dirname(__dirname), "config.json");
+  const defaultPath = __dirname === process.cwd() ?
+    join(__dirname, "config.json") : 
+    join(dirname(__dirname), "config.json");
   const path = configPath || defaultPath;
   
   try {
@@ -34,41 +47,15 @@ export default function createStatelessServer({
 }: {
   config: Config;
 }) {
-  let appConfig: ConfigFile;
-  let serverName = "kirha-gateway";
-  let serverVersion = "1.0.0";
+  const appConfig = loadConfig(config.configPath);
   
-  try {
-    appConfig = loadConfig(config.configPath);
-    serverName = appConfig.mcp.name;
-    serverVersion = appConfig.mcp.version;
-    
-    if (config.debug) {
-      console.log("Loaded configuration:", JSON.stringify(appConfig, null, 2));
-    }
-  } catch (error) {
-    if (config.debug) {
-      console.log("Configuration not available during tool discovery, using defaults");
-    }
-    appConfig = {
-      mcp: { name: serverName, version: serverVersion },
-      tool: {
-        name: "execute-tool-planning",
-        title: "Tool Planning",
-        description: "Execute tool planning with your configured vertical",
-        enabled: true
-      },
-      vertical: "default",
-      api: {
-        executeToolPlanningUrl: "https://api.kirha.ai/chat/v1/tool-planning/execute",
-        summarization: { enable: true, model: "kirha-flash" }
-      }
-    };
+  if (config.debug) {
+    console.log("Loaded configuration:", JSON.stringify(appConfig, null, 2));
   }
   
   const server = new McpServer({
-    name: serverName,
-    version: serverVersion,
+    name: appConfig.mcp.name,
+    version: appConfig.mcp.version,
   });
 
   const toolConfig = appConfig.tool;
