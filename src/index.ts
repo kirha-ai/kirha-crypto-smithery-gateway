@@ -47,7 +47,6 @@ export default function createStatelessServer({
   config: Config;
 }) {
   const appConfig = loadConfig();
-
   
   const server = new McpServer({
     name: appConfig.mcp.name,
@@ -58,9 +57,9 @@ export default function createStatelessServer({
   
   try {
     registerToolPlanningTool(server, {
-      apiKey: config.apiKey,
       config: appConfig,
       toolConfig,
+      requestConfig: config,
     });
   } catch (error) {
     console.error(`Failed to register tool ${toolConfig.name}:`, error);

@@ -3,19 +3,29 @@ import { z } from "zod";
 import { ToolRegistrationContext } from "../types.js";
 
 
-// Define the input schema for the tool
 const toolInputSchema = {
   query: z.string().describe("Your question or query to be processed"),
 };
 
 export function registerToolPlanningTool(server: McpServer, context: ToolRegistrationContext) {
-  const { apiKey, config, toolConfig } = context;
+  const { config, toolConfig, requestConfig } = context;
   
   server.tool(
     toolConfig.name,
     toolConfig.description,
     toolInputSchema,
     async (args) => {
+      const apiKey = requestConfig.apiKey;
+      
+      if (!apiKey) {
+        return { 
+          content: [{ 
+            type: "text" as const, 
+            text: "Error: API key is required to execute this tool" 
+          }] 
+        };
+      }
+      
       try {
         const response = await fetch(config.api.executeToolPlanningUrl, {
           method: "POST",
