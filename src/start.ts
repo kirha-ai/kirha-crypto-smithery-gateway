@@ -51,17 +51,7 @@ function parseQueryParams(query: any): any {
 // MCP endpoint - handle both GET and POST
 const handleMcpRequest = async (req: any, res: any, body?: any) => {
     // Parse configuration from query parameters
-    let queryConfig = parseQueryParams(req.query);
-    
-    // Handle base64-encoded config parameter (Smithery SDK format)
-    if (req.query.config) {
-        try {
-            const decodedConfig = JSON.parse(Buffer.from(req.query.config, "base64").toString());
-            queryConfig = { ...queryConfig, ...decodedConfig };
-        } catch (error) {
-            console.error('Error parsing base64 config:', error);
-        }
-    }
+    const queryConfig = parseQueryParams(req.query);
 
     const requestConfig = {
         ...config,
