@@ -1,8 +1,6 @@
 import { z } from "zod";
 
 export const configSchema = z.object({
-  debug: z.boolean().default(false).describe("Enable debug logging"),
-  configPath: z.string().optional().describe("Path to custom configuration file"),
   apiKey: z.string().describe("Your API key for tool planning"),
 });
 
@@ -15,7 +13,6 @@ export const configFileSchema = z.object({
     name: z.string(),
     title: z.string(),
     description: z.string(),
-    enabled: z.boolean().default(true),
   }),
   vertical: z.string(),
   api: z.object({
@@ -35,7 +32,5 @@ export interface ToolRegistrationContext {
   apiKey: string;
   config: ConfigFile;
   toolConfig: ToolConfig;
-  debug: boolean;
-  configPath?: string;
 }
 
