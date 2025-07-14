@@ -1,12 +1,20 @@
 runtime: "container"
 startCommand:
-  type: "http"
+  type: "mcp"
+  cmd: ["npm", "start"]
   configSchema:
     type: "object"
     properties:
       apiKey:
         type: "string"
         description: "Your API key"
+      debug:
+        type: "boolean"
+        description: "Enable debug logging"
+        default: false
+      configPath:
+        type: "string"
+        description: "Path to custom configuration file"
     required: ["apiKey"]
 build:
   dockerfile: "Dockerfile"
