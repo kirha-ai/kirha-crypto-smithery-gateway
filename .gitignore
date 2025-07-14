@@ -10,6 +10,7 @@
 
 # Exception: Include configuration and documentation files
 !/Dockerfile
+!.dockerignore
 !/README.md
 !/package.json
 !/tsconfig.json
