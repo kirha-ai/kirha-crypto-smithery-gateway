@@ -1,5 +1,9 @@
 # Kirha Smithery Gateway
-
+<p align="center">
+  <a href="https://kirha.ai" target="_blank">
+    <img src="https://raw.githubusercontent.com/kirha-ai/kirha-mcp-gateway/refs/heads/main/assets/logo.png" width="2500" alt="Kirha Logo">
+  </a>
+</p>
 A configurable MCP (Model Context Protocol) server for Kirha tool planning ready to use with Smithery
 ## Features
 
