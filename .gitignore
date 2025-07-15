@@ -17,6 +17,8 @@
 !/smithery.yaml
 !/config.json
 !/config.example.json
+!/assets/
+!/assets/**/*
 
 # Exception: Include GitHub workflows
 !/.github/
